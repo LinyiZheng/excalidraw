@@ -858,8 +858,6 @@ const ExcalidrawWrapper = () => {
   );
 };
 
-<SimpleApp/>
-
 const ExcalidrawApp = () => {
   return (
     <TopErrorBoundary>
