@@ -104,7 +104,6 @@ import { ShareableLinkDialog } from "../packages/excalidraw/components/Shareable
 import { openConfirmModal } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirmState";
 import { OverwriteConfirmDialog } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirm";
 import Trans from "../packages/excalidraw/components/Trans";
-import SimpleApp from "./components/SimpleExcalidraw";
 
 polyfill();
 

@@ -25,9 +25,6 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {
-    "react-router-dom": "7.6.2"
-  },
   "prettier": "@excalidraw/prettier-config",
   "scripts": {
     "build-node": "node ./scripts/build-node.js",
@@ -38,5 +35,8 @@
     "start": "yarn && vite --host 0.0.0.0",
     "start:production": "npm run build && npx http-server build -a localhost -p 5001 -o",
     "build:preview": "yarn build && vite preview --port 5000"
+  },
+  "dependencies": {
+    "react-router-dom": "6.30.1"
   }
 }

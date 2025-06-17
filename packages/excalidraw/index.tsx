@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import { InitializeApp } from "./components/InitializeApp";
 import App from "./components/App";
 import { isShallowEqual } from "./utils";
@@ -51,6 +51,8 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     aiEnabled,
   } = props;
 
+  const [setInitialData] = useState<any | null>(null);
+
   const canvasActions = props.UIOptions?.canvasActions;
 
   // FIXME normalize/set defaults in parent component so that the memo resolver
@@ -81,6 +83,18 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
 
   useEffect(() => {
     // Block pinch-zooming on iOS outside of the content area
+
+    // linyi add
+    fetch("http://localhost:8080/api/load", {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => setInitialData(data))
+      .catch((err) => {
+        console.error("加载失败", err);
+        setInitialData({}); // fallback 空数据
+      });
+
     const handleTouchMove = (event: TouchEvent) => {
       // @ts-ignore
       if (typeof event.scale === "number" && event.scale !== 1) {
@@ -97,11 +111,22 @@ const ExcalidrawBase = (props: ExcalidrawProps) => {
     };
   }, []);
 
+  if(!initialData) return <div>加载中...</div>;
+
   return (
     <Provider unstable_createStore={() => jotaiStore} scope={jotaiScope}>
       <InitializeApp langCode={langCode} theme={theme}>
         <App
-          onChange={onChange}
+          onChange={(elements, appState) => {
+            fetch("http://localhost:8080/api/save", {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ elements, appState }),
+            });
+          }}
           initialData={initialData}
           excalidrawAPI={excalidrawAPI}
           isCollaborating={isCollaborating}
