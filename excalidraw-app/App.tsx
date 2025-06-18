@@ -106,8 +106,8 @@ import { openConfirmModal } from "../packages/excalidraw/components/OverwriteCon
 import { OverwriteConfirmDialog } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirm";
 import Trans from "../packages/excalidraw/components/Trans";
 import initialData from "@excalidraw/excalidraw/example/initialData";
-import Login from "./Login"
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+// import Login from "./Login"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import App from "@excalidraw/excalidraw/example/App";
 
 polyfill();
@@ -284,11 +284,12 @@ export const appLangCodeAtom = atom(
 );
 
 // Auth 工具函数 add by linyi
-function getToken(): string | null {
-  return localStorage.getItem("token");
+function getToken(username:string): string | null {
+  return localStorage.getItem(`${username}_token`);
 }
-function setToken(token: string) {
-  localStorage.setItem("token", token);
+function setToken(username:string,token: string) {
+  // console.info(token)
+  localStorage.setItem(`${username}_token`, token);
 }
 function logout() {
   localStorage.removeItem("token");
@@ -296,11 +297,16 @@ function logout() {
 }
 
 // 后端交互方法 add by linyi
-async function apiMe(): Promise<any> {
-  const t = getToken();
-  if (!t) throw new Error("no token");
-  const res = await fetch("/api/me", {
-    headers: { Authorization: `Bearer ${t}` }
+async function apiMe(username:string): Promise<any> {
+  const userToken = getToken(username);
+  // console.info(userToken)
+  if (!userToken) throw new Error("no token");
+  console.info(userToken)
+  const res = await fetch(`/api/me?username=${username}`, {
+    method:"GET",
+    headers: { Authorization: `Bearer ${userToken}` },
+    credentials:"include"
+    
   });
   if (!res.ok) throw new Error("unauthorized");
   return res.json();
@@ -317,8 +323,8 @@ async function apiLogin(username: string, password: string): Promise<string> {
   const json = await res.json();
   return json.token;
 }
-async function apiLoad(): Promise<ExcalidrawInitialDataState | null> {
-  const t = getToken();
+async function apiLoad(username:string): Promise<ExcalidrawInitialDataState | null> {
+  const t = getToken(username);
   const res = await fetch("/api/load", {
     headers: {
       Authorization: `Bearer ${t}`
@@ -327,8 +333,8 @@ async function apiLoad(): Promise<ExcalidrawInitialDataState | null> {
   if (!res.ok) return null;
   return res.json();
 }
-async function apiSave(data: ExcalidrawInitialDataState) {
-  const t = getToken();
+async function apiSave(username:string,data: ExcalidrawInitialDataState) {
+  const t = getToken(username);
   await fetch("/api/save", {
     method: "POST",
     headers: {
@@ -347,6 +353,9 @@ const ExcalidrawWrapper = () => {
   // add by linyi
   const [path, setPath] = useState(window.location.pathname);
   const [user, setUser] = useState<any>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  // const navigate = useNavigate();
 
   // initial state
   // ---------------------------------------------------------------------------
@@ -763,34 +772,38 @@ const ExcalidrawWrapper = () => {
     return () => window.removeEventListener("popstate", onNav);
   }, []);
 
-  // 登录状态保护
+  // 登录状态保护 add by linyi
   useEffect(() => {
     if (path === "/login") return;
-    apiMe()
+    apiMe(username)
       .then(setUser)
       .catch(() => logout());
   }, [path]);
 
-  // 登录页面
+  // 登录页面 add by linyi
   if (path === "/login") {
-    const [u, setU] = useState("");
-    const [p, setP] = useState("");
-    const doLogin = async () => {
+    const doLogin = async (e:React.FormEvent) => {
+      e.preventDefault();
       try {
-        const token = await apiLogin(u, p);
-        setToken(token);
+        const token = await apiLogin(username, password);
+        setToken(username,token);
+        // alert("doLogin:"+token)
         window.history.pushState(null, "", "/");
         setPath("/");
+        // navigate("/")
       } catch (e) {
+        alert(e)
         alert("登录失败");
       }
     };
     return (
       <div style={{ padding: 20 }}>
-        <h2>登录</h2>
-        <input placeholder="用户名" value={u} onChange={e => setU(e.target.value)} /><br />
-        <input type="password" placeholder="密码" value={p} onChange={e => setP(e.target.value)} /><br />
-        <button onClick={doLogin}>登录</button>
+        <form onSubmit={doLogin}>
+          <h2>登录</h2>
+          <input type="text" name="username" placeholder="用户名" value={username} onChange={e => setUsername(e.target.value)} /><br />
+          <input type="password" name="password" placeholder="密码" value={password} onChange={e => setPassword(e.target.value)} /><br />
+          <button type="submit">登录</button>
+        </form>
       </div>
     );
   }
@@ -832,9 +845,9 @@ const ExcalidrawWrapper = () => {
         // onChange={onChange}
         // initialData={initialStatePromiseRef.current.promise}
         onChange={(elements,appState)=>{
-          apiSave({elements,appState})
+          apiSave(username,{elements,appState})
         }}
-        initialData={apiLoad()}
+        initialData={apiLoad(username)}
         isCollaborating={isCollaborating}
         onPointerUpdate={collabAPI?.onPointerUpdate}
         UIOptions={{
@@ -997,8 +1010,8 @@ const ExcalidrawWrapper = () => {
   );
 };
 
-// 挂载 App.tsx
-createRoot(document.getElementById("root")!).render(<ExcalidrawWrapper />);
+// // 挂载 App.tsx
+// createRoot(document.getElementById("root")!).render(<ExcalidrawWrapper />);
 
 const ExcalidrawApp = () => {
   return (

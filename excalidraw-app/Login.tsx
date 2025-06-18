@@ -24,11 +24,11 @@ export default function Login(){
     
     return(
         <form onSubmit={handleSubmit}>
-        <h2>登录</h2>
-        <input value={username} onChange={e => setUsername(e.target.value)} />
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        <button type="submit">登录</button>
-      </form>
+            <h2>登录</h2>
+            <input type="text" name="username" placeholder="用户名" value={username} onChange={e => setUsername(e.target.value)} />
+            <input type="password" name="password" placeholder="密码" value={password} onChange={e => setPassword(e.target.value)} />
+            <button type="submit">登录</button>
+        </form>
     )
     
 }
