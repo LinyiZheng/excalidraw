@@ -1,6 +1,7 @@
 import polyfill from "../packages/excalidraw/polyfill";
 import LanguageDetector from "i18next-browser-languagedetector";
-import { useEffect, useRef, useState } from "react";
+import React,{ useEffect, useRef, useState } from "react";
+import {createRoot} from "react-dom/client"
 import { trackEvent } from "../packages/excalidraw/analytics";
 import { getDefaultAppState } from "../packages/excalidraw/appState";
 import { ErrorDialog } from "../packages/excalidraw/components/ErrorDialog";
@@ -104,6 +105,10 @@ import { ShareableLinkDialog } from "../packages/excalidraw/components/Shareable
 import { openConfirmModal } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirmState";
 import { OverwriteConfirmDialog } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirm";
 import Trans from "../packages/excalidraw/components/Trans";
+import initialData from "@excalidraw/excalidraw/example/initialData";
+import Login from "./Login"
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import App from "@excalidraw/excalidraw/example/App";
 
 polyfill();
 
@@ -278,10 +283,70 @@ export const appLangCodeAtom = atom(
   Array.isArray(detectedLangCode) ? detectedLangCode[0] : detectedLangCode,
 );
 
+// Auth 工具函数 add by linyi
+function getToken(): string | null {
+  return localStorage.getItem("token");
+}
+function setToken(token: string) {
+  localStorage.setItem("token", token);
+}
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "/login";
+}
+
+// 后端交互方法 add by linyi
+async function apiMe(): Promise<any> {
+  const t = getToken();
+  if (!t) throw new Error("no token");
+  const res = await fetch("/api/me", {
+    headers: { Authorization: `Bearer ${t}` }
+  });
+  if (!res.ok) throw new Error("unauthorized");
+  return res.json();
+}
+
+// add by linyi
+async function apiLogin(username: string, password: string): Promise<string> {
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+  if (!res.ok) throw new Error("login failed");
+  const json = await res.json();
+  return json.token;
+}
+async function apiLoad(): Promise<ExcalidrawInitialDataState | null> {
+  const t = getToken();
+  const res = await fetch("/api/load", {
+    headers: {
+      Authorization: `Bearer ${t}`
+    }
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+async function apiSave(data: ExcalidrawInitialDataState) {
+  const t = getToken();
+  await fetch("/api/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${t}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
 const ExcalidrawWrapper = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [langCode, setLangCode] = useAtom(appLangCodeAtom);
   const isCollabDisabled = isRunningInIframe();
+
+  // add by linyi
+  const [path, setPath] = useState(window.location.pathname);
+  const [user, setUser] = useState<any>(null);
 
   // initial state
   // ---------------------------------------------------------------------------
@@ -666,6 +731,73 @@ const ExcalidrawWrapper = () => {
 
   const isOffline = useAtomValue(isOfflineAtom);
 
+
+  // add by linyi 20250618
+  const [initialData,setInitialData]=useState(null);
+
+  // useEffect(()=>{
+  //   fetch("http://localhost:8080/api/me",{credentials:"include"})
+  //   .then(res=>{
+  //     if(res.status==200) return res.json();
+  //     else {
+  //       console.warn("未登录，状态码:", res.status);
+  //       //跳转登录页
+  //       window.location.href="/login";
+  //     }
+  //   })
+  //   .then(user=>{
+  //     setUser(user);
+  //     return fetch("http://localhost:8080/api/load",{credentials:"include"});
+  //   })
+  //   .then(res=>res.json())
+  //   .then(data=>setInitialData(data))
+  // },[])
+
+  // if (!user || !initialData) return <div>正在加载...</div>;
+
+  // add by linyi
+  // 路由变化监听
+  useEffect(() => {
+    const onNav = () => setPath(window.location.pathname);
+    window.addEventListener("popstate", onNav);
+    return () => window.removeEventListener("popstate", onNav);
+  }, []);
+
+  // 登录状态保护
+  useEffect(() => {
+    if (path === "/login") return;
+    apiMe()
+      .then(setUser)
+      .catch(() => logout());
+  }, [path]);
+
+  // 登录页面
+  if (path === "/login") {
+    const [u, setU] = useState("");
+    const [p, setP] = useState("");
+    const doLogin = async () => {
+      try {
+        const token = await apiLogin(u, p);
+        setToken(token);
+        window.history.pushState(null, "", "/");
+        setPath("/");
+      } catch (e) {
+        alert("登录失败");
+      }
+    };
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>登录</h2>
+        <input placeholder="用户名" value={u} onChange={e => setU(e.target.value)} /><br />
+        <input type="password" placeholder="密码" value={p} onChange={e => setP(e.target.value)} /><br />
+        <button onClick={doLogin}>登录</button>
+      </div>
+    );
+  }
+
+  // 编辑页面加载中
+  if (!user) return <div>加载中用户信息...</div>;
+
   // browsers generally prevent infinite self-embedding, there are
   // cases where it still happens, and while we disallow self-embedding
   // by not whitelisting our own origin, this serves as an additional guard
@@ -686,16 +818,23 @@ const ExcalidrawWrapper = () => {
   }
 
   return (
-    <div
-      style={{ height: "100%" }}
-      className={clsx("excalidraw-app", {
-        "is-collaborating": isCollaborating,
-      })}
-    >
+      <div style={{ height: "100%",display: "flex", flexDirection: "column" }} className={clsx("excalidraw-app", {"is-collaborating": isCollaborating,})}>
+        <div style={{ padding: 8, display: "flex", justifyContent: "space-between" }}>
+          <div>{user.username}</div><button onClick={logout}>退出</button>
+        </div>
+      {/* <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </BrowserRouter> */}
       <Excalidraw
         excalidrawAPI={excalidrawRefCallback}
-        onChange={onChange}
-        initialData={initialStatePromiseRef.current.promise}
+        // onChange={onChange}
+        // initialData={initialStatePromiseRef.current.promise}
+        onChange={(elements,appState)=>{
+          apiSave({elements,appState})
+        }}
+        initialData={apiLoad()}
         isCollaborating={isCollaborating}
         onPointerUpdate={collabAPI?.onPointerUpdate}
         UIOptions={{
@@ -857,6 +996,9 @@ const ExcalidrawWrapper = () => {
     </div>
   );
 };
+
+// 挂载 App.tsx
+createRoot(document.getElementById("root")!).render(<ExcalidrawWrapper />);
 
 const ExcalidrawApp = () => {
   return (
