@@ -111,6 +111,7 @@ import initialData from "@excalidraw/excalidraw/example/initialData";
 // import Login from "./Login"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import App from "@excalidraw/excalidraw/example/App";
+import JSencrypt, { JSEncrypt } from "jsencrypt"
 
 polyfill();
 
@@ -316,11 +317,26 @@ async function apiMe(username:string): Promise<any> {
 
 // add by linyi
 async function apiLogin(username: string, password: string): Promise<string> {
+  //获取公钥
+  const keyres = await fetch("/api/publickey",{
+    method:"GET",
+    credentials:"include",
+    headers:{ "Content-Type": "application/json" }
+  })
+  const {publickey} = await keyres.json();
+  console.info(publickey)
+  const encryptor = new JSEncrypt();
+  encryptor.setPublicKey(`-----BEGIN PUBLIC KEY-----\n${publickey}\n-----END PUBLIC KEY-----`);
+  const encryptPassword = encryptor.encrypt(password);
+
+
   const res = await fetch("/api/login", {
     method: "POST",
     credentials:"include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ 
+      "username":username, 
+      "password":encryptPassword })
   });
   if (!res.ok) throw new Error("login failed");
   const json = await res.json();

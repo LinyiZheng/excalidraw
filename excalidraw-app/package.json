@@ -37,6 +37,7 @@
     "build:preview": "yarn build && vite preview --port 5000"
   },
   "dependencies": {
+    "jsencrypt": "3.3.2",
     "react-router-dom": "6.30.1"
   }
 }
