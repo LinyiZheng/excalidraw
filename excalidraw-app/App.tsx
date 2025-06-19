@@ -3,7 +3,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import React,{ useEffect, useRef, useState } from "react";
 import {createRoot} from "react-dom/client"
 import { trackEvent } from "../packages/excalidraw/analytics";
-import { getDefaultAppState } from "../packages/excalidraw/appState";
+import { clearAppStateForDatabase, getDefaultAppState } from "../packages/excalidraw/appState";
 import { ErrorDialog } from "../packages/excalidraw/components/ErrorDialog";
 import { TopErrorBoundary } from "./components/TopErrorBoundary";
 import {
@@ -36,6 +36,8 @@ import {
   BinaryFiles,
   ExcalidrawInitialDataState,
   UIAppState,
+  SocketId,
+  Collaborator
 } from "../packages/excalidraw/types";
 import {
   debounce,
@@ -316,6 +318,7 @@ async function apiMe(username:string): Promise<any> {
 async function apiLogin(username: string, password: string): Promise<string> {
   const res = await fetch("/api/login", {
     method: "POST",
+    credentials:"include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password })
   });
@@ -324,24 +327,39 @@ async function apiLogin(username: string, password: string): Promise<string> {
   return json.token;
 }
 async function apiLoad(username:string): Promise<ExcalidrawInitialDataState | null> {
-  const t = getToken(username);
-  const res = await fetch("/api/load", {
+  const token = getToken(username);
+  const res = await fetch(`/api/load?username=${username}`, {
+    method:"GET",
+    credentials:"include",
     headers: {
-      Authorization: `Bearer ${t}`
+      Authorization: `Bearer ${token}`
     }
   });
   if (!res.ok) return null;
-  return res.json();
+  const json=await res.json()
+  if (json===null) return null;
+  else{
+    const drawData=json.data;
+    console.info(drawData);
+    const data:ExcalidrawInitialDataState = JSON.parse(drawData)
+
+    // add by linyi 将保存的数据恢复出来
+    return {
+      elements:data.elements,
+      appState:clearAppStateForDatabase(data.appState ?? {})
+    }
+  }    
 }
-async function apiSave(username:string,data: ExcalidrawInitialDataState) {
-  const t = getToken(username);
+async function apiSave(username:string,drawData: ExcalidrawInitialDataState) {
+  const token = getToken(username);
+  const data = JSON.stringify(drawData);
   await fetch("/api/save", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${t}`,
+      Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify({username,data})
   });
 }
 
