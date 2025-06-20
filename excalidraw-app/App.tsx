@@ -830,13 +830,60 @@ const ExcalidrawWrapper = () => {
         alert("登录失败");
       }
     };
+
+    const backgroundStyle = {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      padding:'100px'
+      // backgroundImage: 'url("/background.jpg")',
+      // backgroundSize: 'cover',
+      // backgroundPosition: 'center',
+      
+    };
+
+    const formStyle = {
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: '60px',
+      borderRadius: '10px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+      minWidth: '300px',
+      maxWidth: '500px',     // 新增最大宽度
+      width: '100%',         // 自适应容器
+    };
+
+    const buttonStyle = {
+      display: 'block',
+      width: '35%',
+      margin: '0 auto',
+      padding: '15px',
+      fontSize: '15px',
+      backgroundColor: '#4CAF50',
+      color: 'white',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+    };
+
+    const inputStyle = {
+      display: 'block',
+      margin: '0 auto',
+      width: '50%',
+      padding: '15px',
+      marginBottom: '20px',
+      fontSize: '15px',
+      borderRadius: '6px',
+      border: '1px solid #ccc',
+    };
+
     return (
-      <div style={{ padding: 20 }}>
-        <form onSubmit={doLogin}>
-          <h2>登录</h2>
-          <input type="text" name="username" placeholder="用户名" value={username} onChange={e => setUsername(e.target.value)} /><br />
-          <input type="password" name="password" placeholder="密码" value={password} onChange={e => setPassword(e.target.value)} /><br />
-          <button type="submit">登录</button>
+      <div style={backgroundStyle}>
+        <form style={formStyle} onSubmit={doLogin}>
+          <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>登录</h2>
+          <input type="text" name="username" placeholder="用户名" value={username} onChange={e => setUsername(e.target.value)} style={inputStyle}/><br />
+          <input type="password" name="password" placeholder="密码" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle}/><br />
+          <button type="submit" style={buttonStyle}>登录</button>
         </form>
       </div>
     );
