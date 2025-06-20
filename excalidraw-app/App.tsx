@@ -324,7 +324,7 @@ async function apiLogin(username: string, password: string): Promise<string> {
     headers:{ "Content-Type": "application/json" }
   })
   const {publickey} = await keyres.json();
-  console.info(publickey)
+  // console.info(publickey)
   const encryptor = new JSEncrypt();
   encryptor.setPublicKey(`-----BEGIN PUBLIC KEY-----\n${publickey}\n-----END PUBLIC KEY-----`);
   const encryptPassword = encryptor.encrypt(password);
@@ -356,7 +356,7 @@ async function apiLoad(username:string): Promise<ExcalidrawInitialDataState | nu
   if (json===null) return null;
   else{
     const drawData=json.data;
-    console.info(drawData);
+    // console.info(drawData);
     const data:ExcalidrawInitialDataState = JSON.parse(drawData)
 
     // add by linyi 将保存的数据恢复出来
@@ -391,6 +391,9 @@ const ExcalidrawWrapper = () => {
   const [password, setPassword] = useState("");
   const [initialData, setInitialData] = useState<ExcalidrawInitialDataState | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
 
   // initial state
   // ---------------------------------------------------------------------------
@@ -807,12 +810,32 @@ const ExcalidrawWrapper = () => {
   // 用户登录后只加载一次数据
   useEffect(()=>{
     if(user && user.username){
-      console.info('user:',user)
-      console.info('username:',user.username)
+      // console.info('user:',user)
+      // console.info('username:',user.username)
       apiLoad(user.username).then(data =>{setInitialData(data)
                                           });
     }
   },[user])
+
+  // 只有用户主动编辑 ，才进行保存
+  // useEffect(() => {
+  //   const handleUserInteract = () => setHasUserInteracted(true);
+  //   window.addEventListener("mousedown",handleUserInteract,{once:true});
+  //   window.addEventListener("keydown",handleUserInteract,{once:true});
+  //   window.addEventListener("touchstart",handleUserInteract,{once:true});
+  //   return ()=> {
+  //     window.removeEventListener("mousedown",handleUserInteract);
+  //     window.removeEventListener("keydown",handleUserInteract);
+  //     window.removeEventListener("touchstart",handleUserInteract);
+  //   }
+  // }, []);
+
+  // // 只在 initialData 加载后，第一次 onChange 时设置 hasInitialized
+  // useEffect(() => {
+  //   if (initialData && !hasInitialized) {
+  //     setHasInitialized(true);
+  //   }
+  // }, [initialData]);
 
   // 登录页面 add by linyi
   if (path === "/login") {
@@ -924,10 +947,11 @@ const ExcalidrawWrapper = () => {
         excalidrawAPI={excalidrawRefCallback}
         // onChange={onChange}
         // initialData={initialStatePromiseRef.current.promise}
-        onChange={(elements,appState)=>{
-          apiSave(username,{elements,appState})
-        }}
         initialData={initialData}
+        onChange={(elements,appState)=>{
+          // if(!hasUserInteracted) return;
+          apiSave(username,{elements,appState});
+        }}
         isCollaborating={isCollaborating}
         onPointerUpdate={collabAPI?.onPointerUpdate}
         UIOptions={{
