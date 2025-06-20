@@ -804,6 +804,16 @@ const ExcalidrawWrapper = () => {
       .catch(() => logout());
   }, [path]);
 
+  // 用户登录后只加载一次数据
+  useEffect(()=>{
+    if(user && user.username){
+      console.info('user:',user)
+      console.info('username:',user.username)
+      apiLoad(user.username).then(data =>{setInitialData(data)
+                                          });
+    }
+  },[user])
+
   // 登录页面 add by linyi
   if (path === "/login") {
     const doLogin = async (e:React.FormEvent) => {
