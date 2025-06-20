@@ -107,8 +107,6 @@ import { ShareableLinkDialog } from "../packages/excalidraw/components/Shareable
 import { openConfirmModal } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirmState";
 import { OverwriteConfirmDialog } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirm";
 import Trans from "../packages/excalidraw/components/Trans";
-import initialData from "@excalidraw/excalidraw/example/initialData";
-// import Login from "./Login"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import App from "@excalidraw/excalidraw/example/App";
 import JSencrypt, { JSEncrypt } from "jsencrypt"
@@ -300,11 +298,11 @@ function logout() {
 }
 
 // 后端交互方法 add by linyi
-async function apiMe(username:string): Promise<any> {
+async function apiMe(username:string): Promise<{username:string,token:string}> {
   const userToken = getToken(username);
   // console.info(userToken)
   if (!userToken) throw new Error("no token");
-  console.info(userToken)
+  // console.info(userToken)
   const res = await fetch(`/api/me?username=${username}`, {
     method:"GET",
     headers: { Authorization: `Bearer ${userToken}` },
@@ -312,7 +310,11 @@ async function apiMe(username:string): Promise<any> {
     
   });
   if (!res.ok) throw new Error("unauthorized");
-  return res.json();
+  const {token} = await res.json();
+  return {
+    username:username,
+    token:token
+  };
 }
 
 // add by linyi
@@ -386,9 +388,10 @@ const ExcalidrawWrapper = () => {
 
   // add by linyi
   const [path, setPath] = useState(window.location.pathname);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{username:string,token:string}>();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   // const navigate = useNavigate();
 
   // initial state
@@ -809,8 +812,20 @@ const ExcalidrawWrapper = () => {
   // 登录状态保护 add by linyi
   useEffect(() => {
     if (path === "/login") return;
+
+    // 先获取本地token,未取到token，直接跳转登录页
+    const userToken = getToken(username);
+    if(!userToken){
+      window.location.href = "/login";
+      return;
+    }
+
+    //token不为空时，执行apiMe判断
     apiMe(username)
-      .then(setUser)
+      .then((user)=> {
+        setUser(user);
+        setIsLoggedIn(true);
+      })
       .catch(() => logout());
   }, [path]);
 
@@ -824,7 +839,6 @@ const ExcalidrawWrapper = () => {
         // alert("doLogin:"+token)
         window.history.pushState(null, "", "/");
         setPath("/");
-        // navigate("/")
       } catch (e) {
         alert(e)
         alert("登录失败");
