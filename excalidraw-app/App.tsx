@@ -107,9 +107,7 @@ import { ShareableLinkDialog } from "../packages/excalidraw/components/Shareable
 import { openConfirmModal } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirmState";
 import { OverwriteConfirmDialog } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirm";
 import Trans from "../packages/excalidraw/components/Trans";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import App from "@excalidraw/excalidraw/example/App";
-import JSencrypt, { JSEncrypt } from "jsencrypt"
+import { JSEncrypt } from "jsencrypt"
 
 polyfill();
 
@@ -391,8 +389,8 @@ const ExcalidrawWrapper = () => {
   const [user, setUser] = useState<{username:string,token:string}>();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [initialData, setInitialData] = useState<ExcalidrawInitialDataState | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  // const navigate = useNavigate();
 
   // initial state
   // ---------------------------------------------------------------------------
@@ -778,29 +776,6 @@ const ExcalidrawWrapper = () => {
   const isOffline = useAtomValue(isOfflineAtom);
 
 
-  // add by linyi 20250618
-  const [initialData,setInitialData]=useState(null);
-
-  // useEffect(()=>{
-  //   fetch("http://localhost:8080/api/me",{credentials:"include"})
-  //   .then(res=>{
-  //     if(res.status==200) return res.json();
-  //     else {
-  //       console.warn("未登录，状态码:", res.status);
-  //       //跳转登录页
-  //       window.location.href="/login";
-  //     }
-  //   })
-  //   .then(user=>{
-  //     setUser(user);
-  //     return fetch("http://localhost:8080/api/load",{credentials:"include"});
-  //   })
-  //   .then(res=>res.json())
-  //   .then(data=>setInitialData(data))
-  // },[])
-
-  // if (!user || !initialData) return <div>正在加载...</div>;
-
   // add by linyi
   // 路由变化监听
   useEffect(() => {
@@ -942,7 +917,7 @@ const ExcalidrawWrapper = () => {
         onChange={(elements,appState)=>{
           apiSave(username,{elements,appState})
         }}
-        initialData={apiLoad(username)}
+        initialData={initialData}
         isCollaborating={isCollaborating}
         onPointerUpdate={collabAPI?.onPointerUpdate}
         UIOptions={{
