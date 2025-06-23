@@ -162,12 +162,25 @@ export class ActionManager {
           ),
         );
       };
+      // const saveData = (formState?: any) => {
+      //   trackAction(action, "ui", appState, elements, this.app, formState);
+
+      //   this.updater(
+      //     action.perform(
+      //       this.getElementsIncludingDeleted(),
+      //       this.getAppState(),
+      //       formState,
+      //       this.app,
+      //     ),
+      //   );
+      // };
 
       return (
         <PanelComponent
           elements={this.getElementsIncludingDeleted()}
           appState={this.getAppState()}
           updateData={updateData}
+          saveToServer={updateData}
           appProps={this.app.props}
           app={this.app}
           data={data}

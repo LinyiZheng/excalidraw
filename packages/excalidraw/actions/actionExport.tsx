@@ -225,6 +225,52 @@ export const actionSaveFileToDisk = register({
   ),
 });
 
+export const actionSaveToServer = register({
+  name:"saveToServer",
+  viewMode:true,
+  trackEvent:{ category: "export" },
+  perform: async (elements, appState, value, app) => {
+    try {
+      // const token = getToken(username);
+      // const data = JSON.stringify(drawData);
+      // await fetch("/api/save", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      //   body: JSON.stringify({username,data})
+      // });
+      console.info(elements);
+      const fileHandle = null;
+      return {
+        commitToHistory: false,
+        appState: {
+          ...appState,
+          openDialog: null,
+          fileHandle:null,
+          toast: { message: t("toast.fileSaved") },
+        },
+      };
+    }catch(error:any){
+      console.error(error);
+      return {commitToHistory:false}
+    }
+  },
+  PanelComponent:({saveToServer}) => (
+    <ToolButton
+      type="button"
+      icon={saveAs}
+      title={t("buttons.saveAs")}
+      aria-label={t("buttons.saveAs")}
+      showAriaLabel={useDevice().editor.isMobile}
+      hidden={!nativeFileSystemSupported}
+      onClick={() => saveToServer(null)}
+      data-testid="save-as-button"
+    />
+  ),
+});
+
 export const actionLoadScene = register({
   name: "loadScene",
   trackEvent: { category: "export" },

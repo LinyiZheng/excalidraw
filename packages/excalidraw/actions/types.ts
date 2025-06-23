@@ -74,6 +74,7 @@ export type ActionName =
   | "changeExportScale"
   | "saveToActiveFile"
   | "saveFileToDisk"
+  | "saveToServer"
   | "loadScene"
   | "duplicateSelection"
   | "deleteSelectedElements"
@@ -130,6 +131,7 @@ export type PanelComponentProps = {
   elements: readonly ExcalidrawElement[];
   appState: AppState;
   updateData: <T = any>(formData?: T) => void;
+  saveToServer: <T =any>(formData?: T) => void;
   appProps: ExcalidrawProps;
   data?: Record<string, any>;
   app: AppClassProperties;

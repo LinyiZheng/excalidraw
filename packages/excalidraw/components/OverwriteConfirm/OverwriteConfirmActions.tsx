@@ -1,7 +1,7 @@
 import React from "react";
 import { FilledButton } from "../FilledButton";
 import { useExcalidrawActionManager, useExcalidrawSetAppState } from "../App";
-import { actionSaveFileToDisk } from "../../actions";
+import { actionSaveFileToDisk,actionSaveToServer } from "../../actions";
 import { useI18n } from "../../i18n";
 import { actionChangeExportEmbedScene } from "../../actions/actionExport";
 
@@ -72,6 +72,24 @@ export const SaveToDisk = () => {
   );
 };
 
+export const SaveToServer = () => {
+  const {t} = useI18n();
+  const actionManager = useExcalidrawActionManager();
+  return (
+    <Action
+      title={t("overwriteConfirm.action.saveToServer.title")}
+      actionLabel={t("overwriteConfirm.action.saveToServer.button")}
+      onClick={() =>{
+        actionManager.executeAction(actionSaveToServer,"ui");
+        // apiSave(user.username,{elements,appState});
+        // alert("已保存到服务器");
+      }}
+    >
+      {t("overwriteConfirm.action.saveToServer.description")}
+    </Action>
+  )
+}
+
 const Actions = Object.assign(
   ({ children }: { children: React.ReactNode }) => {
     return <div className="OverwriteConfirm__Actions">{children}</div>;
@@ -79,6 +97,7 @@ const Actions = Object.assign(
   {
     ExportToImage,
     SaveToDisk,
+    SaveToServer,
   },
 );
 

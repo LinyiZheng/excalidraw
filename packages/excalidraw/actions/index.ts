@@ -37,6 +37,7 @@ export {
   actionChangeExportBackground,
   actionSaveToActiveFile,
   actionSaveFileToDisk,
+  actionSaveToServer,
   actionLoadScene,
 } from "./actionExport";
 

@@ -316,6 +316,9 @@
     "disk_title": "保存到本地",
     "disk_details": "将画布数据导出为文件，以便以后导入",
     "disk_button": "保存为文件",
+    "server_title": "保存到服务器",
+    "server_details": "保存到云端服务器，方便多终端访问",
+    "server_button": "云端保存",
     "link_title": "分享链接",
     "link_details": "导出为只读链接。",
     "link_button": "导出链接",
@@ -495,6 +498,11 @@
         "title": "保存到本地",
         "button": "保存到本地",
         "description": "将画布数据导出为文件，以便以后导入。"
+      },
+      "saveToServer":{
+        "title":"保存到服务器",
+        "button":"云端保存",
+        "description": "保存到云端服务器，方便多终端访问"
       },
       "excalidrawPlus": {
         "title": "Excalidraw+",

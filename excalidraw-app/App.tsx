@@ -1,7 +1,6 @@
 import polyfill from "../packages/excalidraw/polyfill";
 import LanguageDetector from "i18next-browser-languagedetector";
 import React,{ useEffect, useRef, useState } from "react";
-import {createRoot} from "react-dom/client"
 import { trackEvent } from "../packages/excalidraw/analytics";
 import { clearAppStateForDatabase, getDefaultAppState } from "../packages/excalidraw/appState";
 import { ErrorDialog } from "../packages/excalidraw/components/ErrorDialog";
@@ -108,6 +107,11 @@ import { openConfirmModal } from "../packages/excalidraw/components/OverwriteCon
 import { OverwriteConfirmDialog } from "../packages/excalidraw/components/OverwriteConfirm/OverwriteConfirm";
 import Trans from "../packages/excalidraw/components/Trans";
 import { JSEncrypt } from "jsencrypt"
+
+//add by linyi
+import { Card } from "../packages/excalidraw/components/Card";
+import { ExcalidrawLogo } from "../packages/excalidraw/components/ExcalidrawLogo";
+import { ToolButton } from "../packages/excalidraw/components/ToolButton";
 
 polyfill();
 
@@ -809,7 +813,7 @@ const ExcalidrawWrapper = () => {
 
   // 用户登录后只加载一次数据
   useEffect(()=>{
-    if(user && user.username){
+    if(isLoggedIn && user && user.username){
       // console.info('user:',user)
       // console.info('username:',user.username)
       apiLoad(user.username).then(data =>{setInitialData(data)
@@ -844,6 +848,7 @@ const ExcalidrawWrapper = () => {
       try {
         const token = await apiLogin(username, password);
         setToken(username,token);
+        setIsLoggedIn(true);
         // alert("doLogin:"+token)
         window.history.pushState(null, "", "/");
         setPath("/");
@@ -854,11 +859,11 @@ const ExcalidrawWrapper = () => {
     };
 
     const backgroundStyle = {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      padding:'100px'
+      display: "flex",
+      justifyContent: "center",
+      alignItems: ",center",
+      height: "100vh",
+      padding:"100px"
       // backgroundImage: 'url("/background.jpg")',
       // backgroundSize: 'cover',
       // backgroundPosition: 'center',
@@ -866,43 +871,43 @@ const ExcalidrawWrapper = () => {
     };
 
     const formStyle = {
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      padding: '60px',
-      borderRadius: '10px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-      minWidth: '300px',
-      maxWidth: '500px',     // 新增最大宽度
-      width: '100%',         // 自适应容器
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      padding: "60px",
+      borderRadius: "10px",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+      minWidth: "300px",
+      maxWidth: "500px",     // 新增最大宽度
+      width: "100%",         // 自适应容器
     };
 
     const buttonStyle = {
-      display: 'block',
-      width: '35%',
-      margin: '0 auto',
-      padding: '15px',
-      fontSize: '15px',
-      backgroundColor: '#4CAF50',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      cursor: 'pointer',
+      display: "block",
+      width: "35%",
+      margin: "0 auto",
+      padding: "15px",
+      fontSize: "15px",
+      backgroundColor: "#4CAF50",
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      cursor: "pointer",
     };
 
     const inputStyle = {
-      display: 'block',
-      margin: '0 auto',
-      width: '50%',
-      padding: '15px',
-      marginBottom: '20px',
-      fontSize: '15px',
-      borderRadius: '6px',
-      border: '1px solid #ccc',
+      display: "block",
+      margin: "0 auto",
+      width: "50%",
+      padding: "15px",
+      marginBottom: "20px",
+      fontSize: "15px",
+      borderRadius: "6px",
+      border: "1px solid #ccc",
     };
 
     return (
       <div style={backgroundStyle}>
         <form style={formStyle} onSubmit={doLogin}>
-          <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>登录</h2>
+          <h2 style={{ textAlign: "center", marginBottom: "20px" }}>登录</h2>
           <input type="text" name="username" placeholder="用户名" value={username} onChange={e => setUsername(e.target.value)} style={inputStyle}/><br />
           <input type="password" name="password" placeholder="密码" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle}/><br />
           <button type="submit" style={buttonStyle}>登录</button>
@@ -961,24 +966,61 @@ const ExcalidrawWrapper = () => {
               onExportToBackend,
               renderCustomUI: (elements, appState, files) => {
                 return (
-                  <ExportToExcalidrawPlus
-                    elements={elements}
-                    appState={appState}
-                    files={files}
-                    onError={(error) => {
-                      excalidrawAPI?.updateScene({
-                        appState: {
-                          errorMessage: error.message,
-                        },
-                      });
-                    }}
-                    onSuccess={() => {
-                      excalidrawAPI?.updateScene({
-                        appState: { openDialog: null },
-                      });
-                    }}
-                  />
-                );
+                  <>
+                    {/* 增加保存到服务器的按钮 */}
+                    <Card color="primary">
+                      <div className="Card-icon">
+                        <ExcalidrawLogo
+                          style={{
+                            [`--color-logo-icon` as any]: "#fff",
+                            width: "2.8rem",
+                            height: "2.8rem",
+                          }}
+                        />
+                      </div>
+                      <h2>保存到云端</h2>
+                      <div className="Card-details">
+                        {t("exportDialog.server_title")}
+                      </div>
+                      <ToolButton
+                        className="Card-button"
+                        type="button"
+                        title={t("exportDialog.server_button")}
+                        aria-label={t("exportDialog.server_button")}
+                        showAriaLabel={true}
+                        onClick={async () => {
+                          try {
+                            // trackEvent("export", "eplus", `ui (${getFrame()})`);
+                            // onSuccess();
+                          } catch (error: any) {
+                            console.error(error);
+                            if (error.name !== "AbortError") {
+                              // onError(new Error(t("exportDialog.excalidrawplus_exportError")));
+                            }
+                          }
+                        }}
+                      />
+                    </Card>
+                    {/* 保留原来的保存到 ExcalidrawPlus + */}
+                    {/* <ExportToExcalidrawPlus
+                      elements={elements}
+                      appState={appState}
+                      files={files}
+                      onError={(error) => {
+                        excalidrawAPI?.updateScene({
+                          appState: {
+                            errorMessage: error.message,
+                          },
+                        });
+                      }}
+                      onSuccess={() => {
+                        excalidrawAPI?.updateScene({
+                          appState: { openDialog: null },
+                        });
+                      }}
+                    /> */}
+                  </>
+                );//
               },
             },
           },
@@ -1014,6 +1056,7 @@ const ExcalidrawWrapper = () => {
         <OverwriteConfirmDialog>
           <OverwriteConfirmDialog.Actions.ExportToImage />
           <OverwriteConfirmDialog.Actions.SaveToDisk />
+          <OverwriteConfirmDialog.Actions.SaveToServer />
           {excalidrawAPI && (
             <OverwriteConfirmDialog.Action
               title={t("overwriteConfirm.action.excalidrawPlus.title")}

@@ -318,6 +318,9 @@
     "disk_title": "Save to disk",
     "disk_details": "Export the scene data to a file from which you can import later.",
     "disk_button": "Save to file",
+    "server_title": "Save to Server",
+    "server_details": "Save to Cloud which you can access anywhere",
+    "server_button": "Save to Server",
     "link_title": "Shareable link",
     "link_details": "Export as a read-only link.",
     "link_button": "Export to Link",
@@ -497,6 +500,11 @@
         "title": "Save to disk",
         "button": "Save to disk",
         "description": "Export the scene data to a file from which you can import later."
+      },
+      "saveToServer": {
+        "title": "Save to Server",
+        "button": "Save to Server",
+        "description": "Save the scene data to Server which you can import anywhere."
       },
       "excalidrawPlus": {
         "title": "Excalidraw+",

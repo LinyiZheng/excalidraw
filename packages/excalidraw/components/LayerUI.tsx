@@ -125,6 +125,7 @@ const DefaultOverwriteConfirmDialog = () => {
     <OverwriteConfirmDialog __fallback>
       <OverwriteConfirmDialog.Actions.SaveToDisk />
       <OverwriteConfirmDialog.Actions.ExportToImage />
+      <OverwriteConfirmDialog.Actions.SaveToServer />
     </OverwriteConfirmDialog>
   );
 };
