@@ -352,6 +352,8 @@ async function apiLoad(username:string): Promise<ExcalidrawInitialDataState | nu
     method:"GET",
     credentials:"include",
     headers: {
+      "Content-Type":"application/json",
+      "Access-Control-Allow-Credentials":"true",
       Authorization: `Bearer ${token}`
     }
   });
@@ -361,7 +363,7 @@ async function apiLoad(username:string): Promise<ExcalidrawInitialDataState | nu
   else{
     const drawData=json.data;
     // console.info(drawData);
-    const data:ExcalidrawInitialDataState = JSON.parse(drawData)
+    const data:ExcalidrawInitialDataState = JSON.parse(drawData);
 
     // add by linyi 将保存的数据恢复出来
     return {
@@ -818,7 +820,13 @@ const ExcalidrawWrapper = () => {
     if(isLoggedIn && user && user.username){
       // console.info('user:',user)
       // console.info('username:',user.username)
-      apiLoad(user.username).then(data =>{setInitialData(data)
+      apiLoad(user.username).then(data =>{
+        if(Array.isArray(data?.elements)){
+          setInitialData(data);
+        }else{
+          console.info("server result data:",data);
+          console.error("服务端返回的数据中,elements元素不是数组");
+        }
                                           });
     }
   },[user])
@@ -954,7 +962,7 @@ const ExcalidrawWrapper = () => {
         excalidrawAPI={excalidrawRefCallback}
         onChange={onChange}
         // initialData={initialStatePromiseRef.current.promise}
-        initialData={initialData}
+        initialData={initialData??initialStatePromiseRef.current.promise}
         // onChange={(elements,appState)=>{
         //   // if(!hasUserInteracted) return;
         //   apiSave(username,{elements,appState});
