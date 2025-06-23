@@ -373,14 +373,16 @@ async function apiLoad(username:string): Promise<ExcalidrawInitialDataState | nu
 async function apiSave(username:string,drawData: ExcalidrawInitialDataState) {
   const token = getToken(username);
   const data = JSON.stringify(drawData);
-  await fetch("/api/save", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({username,data})
-  });
+  const res=await fetch("/api/save", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({username,data})
+                  });
+  // console.info(res.status);
+  return res.status;
 }
 
 const ExcalidrawWrapper = () => {
@@ -950,13 +952,13 @@ const ExcalidrawWrapper = () => {
       </BrowserRouter> */}
       <Excalidraw
         excalidrawAPI={excalidrawRefCallback}
-        // onChange={onChange}
+        onChange={onChange}
         // initialData={initialStatePromiseRef.current.promise}
         initialData={initialData}
-        onChange={(elements,appState)=>{
-          // if(!hasUserInteracted) return;
-          apiSave(username,{elements,appState});
-        }}
+        // onChange={(elements,appState)=>{
+        //   // if(!hasUserInteracted) return;
+        //   apiSave(username,{elements,appState});
+        // }}
         isCollaborating={isCollaborating}
         onPointerUpdate={collabAPI?.onPointerUpdate}
         UIOptions={{
@@ -992,10 +994,14 @@ const ExcalidrawWrapper = () => {
                           try {
                             // trackEvent("export", "eplus", `ui (${getFrame()})`);
                             // onSuccess();
+                            const saveRes=await apiSave(user.username,{elements,appState});
+                            if(saveRes === 200){
+                            alert("成功保存到服务器");
+                            }
                           } catch (error: any) {
                             console.error(error);
                             if (error.name !== "AbortError") {
-                              // onError(new Error(t("exportDialog.excalidrawplus_exportError")));
+                              alert("保存服务器异常，请先本地保存，稍后重试保存服务器");
                             }
                           }
                         }}
