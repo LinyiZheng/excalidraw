@@ -32,7 +32,7 @@
     "build:app": "cross-env VITE_APP_GIT_SHA=$VERCEL_GIT_COMMIT_SHA vite build",
     "build:version": "node ../scripts/build-version.js",
     "build": "yarn build:app && yarn build:version",
-    "start": "yarn && vite --host 0.0.0.0",
+    "start": "yarn && vite --host 0.0.0.0 --port 9008",
     "start:production": "npm run build && npx http-server build -a localhost -p 5001 -o",
     "build:preview": "yarn build && vite preview --port 5000"
   },
